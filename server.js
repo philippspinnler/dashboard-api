@@ -13,12 +13,16 @@ MODULE_NETATMO_DEVICE_ID
 MODULE_EOGUIDE_CLIENT_KEY
 MODULE_EOGUIDE_USERNAME
 MODULE_EOGUIDE_PASSWORD
+
+TOKEN
 */
 
 'use strict';
 
 require('dotenv').config()
 const express = require('express');
+
+const auth = require('./middleware/auth');
 
 const publicTransportation = require('./routes/public-transportation');
 const eoGuide = require('./routes/eo-guide');
@@ -33,10 +37,10 @@ app.get('/', (req, res) => {
   res.send('DAKBoard API');
 });
 
-app.use('/public-transportation', publicTransportation);
-app.use('/eo-guide', eoGuide);
-app.use('/netatmo', netatmo);
-app.use('/tesla', tesla);
+app.use('/public-transportation', auth, publicTransportation);
+app.use('/eo-guide', auth, eoGuide);
+app.use('/netatmo', auth, netatmo);
+app.use('/tesla', auth, tesla);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
