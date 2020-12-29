@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
         const departure = new Date(Date.parse(response.data.connections[0].departure));
         res.send({
             departure: `${departure.getHours()}:${departure.getMinutes()}`,
-            departureFormatted: `${departure.getHours()}:${departure.getMinutes()} Uhr`
+            departureFormatted: `${departure.getHours()}:${(departure.getMinutes() < 10 ? '0' : '') + departure.getMinutes()} Uhr`
         });
     } catch (e) {
         res.status(404).send({
