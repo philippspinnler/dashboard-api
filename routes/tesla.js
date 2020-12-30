@@ -52,6 +52,14 @@ router.get('/', async (req, res) => {
         }
     });
 
+    const lat = responseState.data.response.drive_state.latitude;
+    const long = responseState.data.response.drive_state.longitude;
+
+    const responseGeolocation = await axios.get(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${long}&key=${process.env.MODULE_TESLA_OPEN_CAGE_API_KEY}`);
+    const road = responseGeolocation.data.results[0].components.road;
+    const city = responseGeolocation.data.results[0].components.city || responseGeolocation.data.results[0].components.village;
+    
+
     res.send({
         name: responseState.data.response.vehicle_state.vehicle_name,
         insideTemperature: responseState.data.response.climate_state.inside_temp,
@@ -62,8 +70,9 @@ router.get('/', async (req, res) => {
         batteryRangeFormatted: `${(responseState.data.response.charge_state.battery_range * 1.60934).toFixed(0)} km`,
         gps: {
             lastUpdate: (new Date(responseState.data.response.drive_state.gps_as_of * 1000)).toISOString(),
-            latitude: responseState.data.response.drive_state.latitude,
-            longitude: responseState.data.response.drive_state.longitude
+            latitude: lat,
+            longitude: long,
+            address: `${road}, ${city}`
         }
     })
 });

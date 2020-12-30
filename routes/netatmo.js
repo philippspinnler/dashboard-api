@@ -47,12 +47,19 @@ router.get('/', async (req, res) => {
 
     const temperature = response.data.body.devices[0].dashboard_data.Temperature;
     const co2 = response.data.body.devices[0].dashboard_data.CO2;
-
+    
     res.send({
         temperature,
         temperatureFormatted: `${temperature} °C`,
         co2,
-        co2Formatted: `${co2} ppm`
+        co2Formatted: `${co2} ppm`,
+        modules: response.data.body.devices[0].modules.map(module => {
+            return {
+                temperature: module.dashboard_data.Temperature,
+                temperatureFormatted: `${module.dashboard_data.Temperature} °C`,
+                batteryPercent: module.battery_percent
+            }
+        })
     })
 });
 
