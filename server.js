@@ -29,6 +29,7 @@ const publicTransportation = require('./routes/public-transportation');
 const eoGuide = require('./routes/eo-guide');
 const netatmo = require('./routes/netatmo');
 const tesla = require('./routes/tesla');
+const essentialPhotos = require('./routes/essential-photos');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
@@ -42,6 +43,7 @@ app.use('/public-transportation', auth, publicTransportation);
 app.use('/eo-guide', auth, eoGuide);
 app.use('/netatmo', auth, netatmo);
 app.use('/tesla', auth, tesla);
+app.use('/essential-photos', auth, essentialPhotos);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
