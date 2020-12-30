@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     res.send({
         facebook: FBCount,
         instagram: IGCount,
-        combinedFormatted: `Facebook: ${FBCount} | Instagram ${IGCount}`
+        combinedFormatted: `FB: ${FBCount} | IG ${IGCount}`
     })
 });
 
