@@ -53,8 +53,9 @@ router.get('/', async (req, res) => {
         temperatureFormatted: `${temperature} °C`,
         co2,
         co2Formatted: `${co2} ppm`,
-        modules: response.data.body.devices[0].modules.map(module => {
+        modules: response.data.body.devices[0].modules.filter(module => module.data_type.includes('Temperature')).map(module => {
             return {
+                module_name: module.module_name,
                 temperature: module.dashboard_data.Temperature,
                 temperatureFormatted: `${module.dashboard_data.Temperature} °C`,
                 batteryPercent: module.battery_percent
