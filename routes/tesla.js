@@ -66,8 +66,8 @@ router.get('/', async (req, res) => {
         insideTemperatureFormatted: `${responseState.data.response.climate_state.inside_temp} °C`,
         batteryLevel: responseState.data.response.charge_state.battery_level,
         batteryLevelFormatted: `${responseState.data.response.charge_state.battery_level} %`,
-        batteryRange: responseState.data.response.charge_state.battery_range,
-        batteryRangeFormatted: `${(responseState.data.response.charge_state.battery_range * 1.60934).toFixed(0)} km`,
+        batteryRange: responseState.data.response.charge_state.ideal_battery_range,
+        batteryRangeFormatted: `${(responseState.data.response.charge_state.ideal_battery_range * 1.60934).toFixed(0)} km`,
         gps: {
             lastUpdate: (new Date(responseState.data.response.drive_state.gps_as_of * 1000)).toISOString(),
             latitude: lat,
