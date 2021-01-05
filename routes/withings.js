@@ -10,13 +10,23 @@ let accessToken = {}
 let refreshTokens = getRefreshTokens();
 
 function getRefreshTokens() {
-    return JSON.parse(fs.readFileSync('.withings_refresh_tokens'));
+    try {
+        return JSON.parse(fs.readFileSync('.withings_refresh_tokens'));
+    } catch(e) {
+        return [];
+    }
 }
 
 function setRefreshToken(person, token) {
     const refreshToken = refreshTokens.find(refreshTokenTmp => refreshTokenTmp.person == person);
     refreshToken.token = token === undefined ? null : token;
     fs.writeFileSync(".withings_refresh_tokens", JSON.stringify(refreshTokens));
+}
+
+function onlyShowOneDecimal(num) {
+    num = num.toString();
+    num = num.slice(0, (num.indexOf(".")) + 2);
+    return Number(num);
 }
 
 router.get('/', async (req, res) => {
@@ -57,8 +67,13 @@ router.get('/', async (req, res) => {
         const currentWeight = response.data.body.measuregrps[0].measures[0].value;
         const lastWeight = response.data.body.measuregrps[1].measures[0].value;
 
-        const currentWeightFormatted = `${Math.round(currentWeight / 1000 * 10) / 10} kg`;
-        const deltaSinceLastMeasureFormatted = `${Math.round((currentWeight - lastWeight) / 1000 * 10) / 10} kg`;
+        const currentWeightFormatted = `${onlyShowOneDecimal((currentWeight / 1000))} kg`;
+
+        let deltaWithOneDecimal = onlyShowOneDecimal(((currentWeight - lastWeight) / 1000));
+        if (deltaWithOneDecimal > 0) {
+            deltaWithOneDecimal = `+${deltaWithOneDecimal}`;
+        }
+        const deltaSinceLastMeasureFormatted = `${deltaWithOneDecimal} kg`;
 
         finalResponse[refreshToken.person] = {
             currentWeight,
