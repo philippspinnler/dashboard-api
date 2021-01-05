@@ -104,3 +104,4 @@ dist
 .tern-port
 
 /*.request
+.withings_refresh_tokens
