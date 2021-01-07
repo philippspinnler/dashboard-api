@@ -3,6 +3,7 @@ const router = express.Router();
 const axios = require("axios");
 const FormData = require('form-data');
 const fs = require('fs');
+const dayjs = require('dayjs');
 
 let expiresAt = {};
 let accessToken = {}
@@ -65,7 +66,9 @@ router.get('/', async (req, res) => {
         });
 
         const currentWeight = response.data.body.measuregrps[0].measures[0].value;
-        const lastWeight = response.data.body.measuregrps[1].measures[0].value;
+        const currentDate = dayjs.unix(response.data.body.measuregrps[0].date);
+        const lastWeightObject = response.data.body.measuregrps.find(weight => dayjs.unix(weight.date).startOf('day').isBefore(currentDate.startOf('day')));
+        const lastWeight = lastWeightObject.measures[0].value;
 
         const currentWeightFormatted = `${onlyShowOneDecimal((currentWeight / 1000))} kg`;
 
