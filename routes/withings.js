@@ -81,6 +81,7 @@ router.get('/', async (req, res) => {
         finalResponse[refreshToken.person] = {
             currentWeight,
             currentWeightFormatted,
+            deltaSinceLastMeasure: deltaWithOneDecimal,
             deltaSinceLastMeasureFormatted
         };
     }
