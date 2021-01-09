@@ -27,14 +27,20 @@ router.get('/', async (req, res) => {
             return accessToken;
         }
 
-        const formData = `grant_type=refresh_token&refresh_token=${refreshToken}`;
-
         const auth = Buffer.from(process.env.MODULE_SONOS_CLIENT_ID + ':' + process.env.MODULE_SONOS_CLIENT_SECRET, 'utf-8').toString('base64');
-        const headers = {'Content-Type': 'application/x-www-form-urlencoded', Authorization: `Basic ${auth}` };
+        
+        const options = {
+            method: 'POST',
+            url: 'https://api.sonos.com/login/v3/oauth/access',
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Basic ${auth}`,
+                'content-type': 'multipart/form-data; boundary=---011000010111000001101001'
+            },
+            data: `-----011000010111000001101001\r\nContent-Disposition: form-data; name="grant_type"\r\n\r\nrefresh_token\r\n-----011000010111000001101001\r\nContent-Disposition: form-data; name="refresh_token"\r\n\r\n${refreshToken}\r\n-----011000010111000001101001--\r\n`
+        };
 
-        const responseToken = await axios.post('https://api.sonos.com/login/v3/oauth/access', formData, {
-            headers
-        });
+        const responseToken = await axios.request(options);
        
         expiresAt = ((Date.now() / 1000) + responseToken.data.expires_in) * 1000;
 
