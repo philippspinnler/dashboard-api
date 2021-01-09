@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const axios = require("axios");
-const FormData = require('form-data');
 const fs = require('fs');
 
 let expiresAt;
@@ -28,13 +27,10 @@ router.get('/', async (req, res) => {
             return accessToken;
         }
 
-        const formData = new FormData();
-
-        formData.append('grant_type', 'refresh_token');
-        formData.append('refresh_token', refreshToken);
+        const formData = `grant_type=refresh_token&refresh_token=${refreshToken}`;
 
         const auth = Buffer.from(process.env.MODULE_SONOS_CLIENT_ID + ':' + process.env.MODULE_SONOS_CLIENT_SECRET, 'utf-8').toString('base64');
-        const headers = { ...formData.getHeaders(), Authorization: `Basic ${auth}` };
+        const headers = {'Content-Type': 'application/x-www-form-urlencoded', Authorization: `Basic ${auth}` };
 
         const responseToken = await axios.post('https://api.sonos.com/login/v3/oauth/access', formData, {
             headers
