@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
     }
     
     res.send({
-        groupped: grouppedEvents
+        groupped: grouppedEvents.slice(0, howManyDays)
     });
 });
 
@@ -59,7 +59,7 @@ function isExcludedDate(event, date) {
 
 async function getDaysFromIcal(calendar, howManyDays=1) {
     const days = [];
-    for (let x = 0; x <= howManyDays; x++) {
+    for (let x = 0; x <= howManyDays+3; x++) {
         days.push(dayjs().add(x, 'day'));
     }
 
