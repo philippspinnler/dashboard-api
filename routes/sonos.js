@@ -94,7 +94,7 @@ router.get('/', async (req, res) => {
     if (service.toLowerCase() == "tunein") {
         res.send({
             name: metadata.container.name,
-            detail: null,
+            detail: metadata.streamInfo ? metadata.streamInfo : null,
             image: metadata.container.imageUrl ? metadata.container.imageUrl : `https://cdn-profiles.tunein.com/${metadata.container.id.objectId}/images/logoq.jpg`
         });
     } else if (service.toLowerCase().split(':')[0] == 'spotify') {
