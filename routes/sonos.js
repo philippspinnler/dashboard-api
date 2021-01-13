@@ -10,7 +10,7 @@ let refreshToken = getRefreshToken();
 
 function getRefreshToken() {
     try {
-        return fs.readFileSync('.sonos_refresh_token');
+        return fs.readFileSync('.sonos_refresh_token').toString();
     } catch (e) {
         return null;
     }
@@ -33,11 +33,10 @@ router.get('/', async (req, res) => {
             method: 'POST',
             url: 'https://api.sonos.com/login/v3/oauth/access',
             headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Basic ${auth}`,
-                'content-type': 'multipart/form-data; boundary=---011000010111000001101001'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Basic ${auth}`
             },
-            data: `-----011000010111000001101001\r\nContent-Disposition: form-data; name="grant_type"\r\n\r\nrefresh_token\r\n-----011000010111000001101001\r\nContent-Disposition: form-data; name="refresh_token"\r\n\r\n${refreshToken}\r\n-----011000010111000001101001--\r\n`
+            data: `grant_type=refresh_token&refresh_token=${refreshToken}`
         };
 
         const responseToken = await axios.request(options);
