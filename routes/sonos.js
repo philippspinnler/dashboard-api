@@ -79,24 +79,27 @@ router.get('/', async (req, res) => {
     
     const metadata = responseMetadata.data;
 
-    if (metadata.container.type == 'linein.homeTheater') {
+    const service = metadata.container.service ? metadata.container.service.name.toLowerCase() : metadata.container.type.toLowerCase();
+
+    if (service == 'linein.hometheater') {
         res.send({
             name: 'Fernseher',
             detail: null,
             image: null
         })
-        return;
-    }
-
-    const service = metadata.container.service.name;
-
-    if (service.toLowerCase() == "tunein") {
+    } else if (service == "tunein") {
         res.send({
             name: metadata.container.name,
             detail: metadata.streamInfo ? metadata.streamInfo : null,
             image: metadata.container.imageUrl ? metadata.container.imageUrl : `https://cdn-profiles.tunein.com/${metadata.container.id.objectId}/images/logoq.jpg`
         });
-    } else if (service.toLowerCase().split(':')[0] == 'spotify') {
+    } else if (service.split(':')[0] == 'spotify') {
+        res.send({
+            name: metadata.currentItem.track.artist.name,
+            detail: metadata.currentItem.track.name,
+            image: metadata.currentItem.track.imageUrl
+        });
+    } else if (service == 'linein.airplay') {
         res.send({
             name: metadata.currentItem.track.artist.name,
             detail: metadata.currentItem.track.name,
