@@ -93,13 +93,7 @@ router.get('/', async (req, res) => {
             detail: metadata.streamInfo ? metadata.streamInfo : null,
             image: metadata.container.imageUrl ? metadata.container.imageUrl : `https://cdn-profiles.tunein.com/${metadata.container.id.objectId}/images/logoq.jpg`
         });
-    } else if (service.split(':')[0] == 'spotify') {
-        res.send({
-            name: metadata.currentItem.track.artist.name,
-            detail: metadata.currentItem.track.name,
-            image: metadata.currentItem.track.imageUrl
-        });
-    } else if (service == 'linein.airplay') {
+    } else if (service.split(':')[0] == 'spotify' || service == 'playlist.spotify.connect' || service == 'linein.airplay') {
         res.send({
             name: metadata.currentItem.track.artist.name,
             detail: metadata.currentItem.track.name,
