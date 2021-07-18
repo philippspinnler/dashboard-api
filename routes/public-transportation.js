@@ -20,16 +20,28 @@ router.get('/', async (req, res) => {
                 }
             }
 
-            const response = await axios.get(`https://timetable.search.ch/api/route.json?num=1&from=${connection[0]}&to=${connection[1]}`);
-            const departure = new Date(response.data.connections[0].departure);
+            const response = await axios.get(`https://timetable.search.ch/api/route.json?num=2&from=${connection[0]}&to=${connection[1]}${connection[2] == 'direct' ? '&direct=1' : ''}`);
+            
+            let departure;
 
-            departures[connectionName] = {
-                connection: connectionName,
-                departure: `${departure.toISOString()}`,
-                departureHHMM: `${departure.getHours()}:${departure.getMinutes()}`,
-                departureFormatted: `${departure.getHours()}:${(departure.getMinutes() < 10 ? '0' : '') + departure.getMinutes()} Uhr`
-            };
+            for (const connection_response of response.data.connections) {
+                if (connection_response.legs && connection_response.legs.filter(leg => leg.hasOwnProperty('type') && leg.type.toLowerCase() != 'walk').length > 0) {
+                    departure = new Date(connection_response.departure);
+                    break;
+                }
+            }
 
+            if (!departure) {
+                departures[connectionName] = {}
+            } else {
+                departures[connectionName] = {
+                    connection: connectionName,
+                    departure: `${departure.toISOString()}`,
+                    departureHHMM: `${departure.getHours()}:${departure.getMinutes()}`,
+                    departureFormatted: `${departure.getHours()}:${(departure.getMinutes() < 10 ? '0' : '') + departure.getMinutes()} Uhr`
+                };
+            }
+           
             result.push(
                 departures[connectionName]
             );

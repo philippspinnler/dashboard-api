@@ -22,6 +22,9 @@ function setRefreshToken(token) {
 }
 
 router.get('/', async (req, res) => {
+    if (!process.env.MODULE_SONOS_CLIENT_ID) {
+        return;
+    }
     const getToken = async () => {
         if (expiresAt && Date.now() < expiresAt) {
             return accessToken;

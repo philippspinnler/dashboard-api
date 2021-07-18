@@ -17,7 +17,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "form-data": "^3.0.0",
-    "icloud-shared-album": "0.0.8",
+    "icloud-shared-album": "0.0.10",
     "instagram-web-api": "^2.2.2"
   },
   "devDependencies": {
