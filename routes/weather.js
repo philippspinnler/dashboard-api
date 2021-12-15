@@ -6,8 +6,8 @@ const dayjs = require('dayjs');
 
 router.get('/', async (req, res) => {
     
-    const lat = 47.4176969;
-    const lon = 7.7612123;
+    const lat = req.query.lat || 47.4176969;
+    const lon = req.query.lon || 7.7612123;
     const units = 'metric';
     const lang = 'de';
     const exclude = 'minutely,hourly,alerts';

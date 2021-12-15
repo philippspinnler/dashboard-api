@@ -42,6 +42,7 @@ const icloudAlbum = require('./routes/icloud-album');
 const ical = require('./routes/ical');
 const weather = require('./routes/weather');
 const sonos = require('./routes/sonos');
+const simpleQuote = require('./routes/simple-quote');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
@@ -64,6 +65,7 @@ app.use('/icloud-album', cache('1 hours'), auth, icloudAlbum);
 app.use('/ical', cache('5 minutes'), auth, ical);
 app.use('/weather', cache('1 hours'), auth, weather);
 app.use('/sonos', cache('5 seconds'), auth, sonos);
+app.use('/simple-quote', cache('5 seconds'), auth, simpleQuote);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
