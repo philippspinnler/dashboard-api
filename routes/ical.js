@@ -279,18 +279,6 @@ async function getIcalFromUrl(url) {
     }
 
     return events.map(event => {
-        if (event.rrule && event.rrule.count) {
-            if (event.rrule.freq == 'DAILY') {
-                event.rrule.until = event.start.add(event.rrule.count, 'day');
-            } else if (event.rrule.freq == 'WEEKLY') {
-                event.rrule.until = event.start.add(event.rrule.count, 'week');
-            } else if (event.rrule.freq == 'MONTHLY') {
-                event.rrule.until = event.start.add(event.rrule.count, 'month');
-            } else if (event.rrule.freq == 'YEARLY') {
-                event.rrule.until = event.start.add(event.rrule.count, 'year');
-            }
-        }
-
         return event;
     });
 }
