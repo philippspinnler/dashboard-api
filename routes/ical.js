@@ -10,19 +10,182 @@ dayjs.extend(isSameOrBefore)
 const { default: axios } = require('axios');
 
 router.get('/', async (req, res) => {
-    const howManyDays = 4;
     const calendars = JSON.parse(process.env.MODULE_ICAL_CALENDARS);
-
+    const howManyDays = 4;
     let allEvents = [];
+
     for (const calendar of calendars) {
-        const events = await getDaysFromIcal(calendar, howManyDays);
+        let events = await getEventsFromURL(calendar.icalUrl);
+        events = simplifyEvents(events);
+
+        // we filter here but preserve all rrule events - this filter should reduce the memory usage
+        events = filterEventsInThePast(events, {preserveRruleEvents: true});
+        events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDays, preserveRruleEvents: true});
+        
+        events = flattenRruleEvents(events);
+        events = removeEventsWithRruleUntilInThePast(events, howManyDays);
+
+        events = filterExcludedDates(events);
+
+        // after flatten the rrule events we have to filter again
+        events = filterEventsInThePast(events);
+        events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDays});
+
+        events = tagEvents(events, calendar.name);
+        events = colorEvents(events, calendar.color);
+       
         allEvents = [...allEvents, ...events];
     }
-    
-    allEvents = allEvents.sort((a, b) => a.start - b.start);
-   
+
+    allEvents = sortEventsByStart(allEvents);
+    allEvents = simplifyEventsForReponse(allEvents);
+    grouppedEvents = groupEventsByDay(allEvents);
+
+    res.send({
+        groupped: grouppedEvents
+    });
+});
+
+module.exports = router;
+
+async function getEventsFromURL(url) {
+    return await getIcalFromUrl(url);
+}
+
+function simplifyEvents(events) {
+    return events.map(event => simplifyEvent(event));
+}
+
+function simplifyEvent(event) {
+    return {
+        summary: event.summary,
+        start: event.start,
+        end: event.end,
+        rrule: event.rrule,
+        allDay: event.allDay || false,
+        rawEvent: event,
+        exdate: event.exdate,
+        calendarName: event.calendarName,
+        color: event.color
+    }
+}
+
+function simplifyEventsForReponse(events) {
+    return events.map(event => simplifyEventForResponse(event));
+}
+
+function simplifyEventForResponse(event) {
+    return {
+        summary: event.summary,
+        start: event.start,
+        end: event.end,
+        allDay: event.allDay || false,
+        calendarName: event.calendarName,
+        color: event.color
+    }
+}
+
+function tagEvents(events, calendarName) {
+    return events.map(event => {
+        return {
+            ...event,
+            calendarName
+        }
+    });
+}
+
+function colorEvents(events, color) {
+    return events.map(event => {
+        return {
+            ...event,
+            color
+        }
+    });
+}
+
+function filterEventsInThePast(events, options={}) {
+    if (options.preserveRruleEvents) {
+        return events.filter(event => event.end > dayjs().startOf('day') || event.rrule);
+    }
+    return events.filter(event => event.end > dayjs().startOf('day'));
+}
+
+function filterEventsInTheFuture(events, options={}) {
+    if (options.preserveRruleEvents) {
+        return events.filter(event => event.start < dayjs().add(options.startDayMoreThanDaysInTheFuture, 'day').endOf('day') || event.rrule);
+    }
+    return events.filter(event => event.start < dayjs().add(options.startDayMoreThanDaysInTheFuture, 'day').endOf('day'));
+}
+
+function flattenRruleEvents(events) {
+    return events.flatMap(event => {
+        if (!event.rrule) return [event];
+
+        let unit;
+        const newEvents = [];
+        if (event.rrule.freq == 'DAILY') {
+            unit = 'day';
+        } else if (event.rrule.freq == 'WEEKLY') {
+            unit = 'week';
+        } else if (event.rrule.freq == 'MONTHLY') {
+            unit = 'month';
+        } else if (event.rrule.freq == 'YEARLY') {
+            unit = 'year';
+        }
+
+        let countReached = false;
+        let count = 1;
+        while(event.end < dayjs().add(2, 'year') && !countReached) {
+            newEvents.push(simplifyEvent(event));
+            const interval = (event.rrule.interval) ? event.rrule.interval : 1;
+            if (event.rrule.count) {
+                count++;
+                if (count > parseInt(event.rrule.count)) {
+                    countReached = true;
+                }
+            }
+            event.start = event.start.add(interval, unit);
+            event.end = event.end.add(interval, unit);
+        }
+
+        blubb = 1;
+        return newEvents;
+    });
+}
+
+function filterExcludedDates(events) {
+    return events.filter(event => {
+        if (!event.exdate) return true;
+        let isExcluded = false;
+        for (const excludedDate of event.exdate) {
+            blubb = 1;
+            if (excludedDate.isSame(event.start, 'day')) {
+                isExcluded = true;
+                break;
+            }
+        }
+        return isExcluded ? false : true;
+    });
+}
+
+function removeEventsWithRruleUntilInThePast(events,) {
+    return events.filter(event => {
+        if (!event.rrule) return true;
+        if (!event.rrule.until) return true;
+        // ignore until if count is set
+        if (event.rrule.until && event.rrule.count) return true;
+        if (event.rrule.until < event.start) return false;
+        return true;
+    });
+}
+
+function sortEventsByStart(events) {
+    return events.sort((a, b) => a.start - b.start);
+}
+
+function groupEventsByDay(events) {
     const grouppedEvents = [];
-    for (const event of allEvents) {
+    for (const event of events) {
         const date = event.start.startOf('day').toISOString();
         const index = grouppedEvents.findIndex(group => group.date == date);
         if (!grouppedEvents[index]) {
@@ -34,93 +197,8 @@ router.get('/', async (req, res) => {
             grouppedEvents[index].events.push(event);
         }
     }
-    
-    res.send({
-        groupped: grouppedEvents.slice(0, howManyDays)
-    });
-});
 
-module.exports = router;
-
-function isExcludedDate(event, date) {
-    let excluded = false;
-
-    if (event.exdate) {
-        for (const exdate of event.exdate) {
-            if (exdate.isSame(date, 'day')) {
-                excluded = true;
-                break;
-            }
-        }
-    }
-
-    return excluded;
-}
-
-async function getDaysFromIcal(calendar, howManyDays=1) {
-    const days = [];
-    for (let x = 0; x <= howManyDays+3; x++) {
-        days.push(dayjs().add(x, 'day'));
-    }
-
-    const events = await getIcalFromUrl(calendar.icalUrl);
-
-    const recurringEvents = [];
-    let filteredEvents = events.filter(event => {
-        let pick = false;
-
-        for (const currentDay of days) {
-            if (event.start.isSame(currentDay, 'day') && !event.rrule) {
-                pick = true;
-            }
-
-            if (event.start.isSameOrBefore(currentDay, 'day') && event.rrule && (!event.rrule.until || event.rrule.until.isSameOrAfter(currentDay, 'day'))) {
-                if (event.rrule.freq == 'DAILY') {
-                    let newStart = currentDay.set('hour', event.start.get('hour')).set('minute', event.start.get('minute')).set('second', event.start.get('second'));
-                    if (!isExcludedDate(event, newStart)) {
-                        recurringEvents.push({ ...event, start: newStart });
-                    }
-                }
-                else if (event.rrule.freq == 'WEEKLY') {
-                    if (event.start.day() == currentDay.day()) {
-                        let newStart = currentDay.set('hour', event.start.get('hour')).set('minute', event.start.get('minute')).set('second', event.start.get('second'));
-                        if (!isExcludedDate(event, newStart)) {
-                            recurringEvents.push({ ...event, start: newStart });
-                        }
-                    }
-                }
-                else if (event.rrule.freq == 'MONTHLY') {
-                    if (event.start.date() == currentDay.date()) {
-                        let newStart = currentDay.set('hour', event.start.get('hour')).set('minute', event.start.get('minute')).set('second', event.start.get('second'));
-                        if (!isExcludedDate(event, newStart)) {
-                            recurringEvents.push({ ...event, start: newStart });
-                        }
-                    }
-                }
-                else if (event.rrule.freq == 'YEARLY') {
-                    if (event.start.get('date') == currentDay.get('date') && event.start.get('month') == currentDay.get('month')) {
-                        let newStart = currentDay.set('hour', event.start.get('hour')).set('minute', event.start.get('minute')).set('second', event.start.get('second'));
-                        if (!isExcludedDate(event, newStart)) {
-                            recurringEvents.push({ ...event, start: newStart });
-                        }
-                    }
-                }
-            }
-        }
-
-        return pick;
-    });
-
-    filteredEvents = filteredEvents.concat(recurringEvents);
-    return filteredEvents.map(event => {
-        return {
-            summary: event.summary,
-            start: event.start,
-            calendarName: calendar.name,
-            color: calendar.color,
-            allDay: event.allDay || false
-        }
-    });
+    return grouppedEvents;
 }
 
 async function getIcalFromUrl(url) {
