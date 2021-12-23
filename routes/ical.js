@@ -11,7 +11,8 @@ const { default: axios } = require('axios');
 
 router.get('/', async (req, res) => {
     const calendars = JSON.parse(process.env.MODULE_ICAL_CALENDARS);
-    const howManyDays = 4;
+    const howManyDaysToParse = 7;
+    const howManyDaysToRespond = 4;
     let allEvents = [];
 
     for (const calendar of calendars) {
@@ -20,16 +21,16 @@ router.get('/', async (req, res) => {
 
         // we filter here but preserve all rrule events - this filter should reduce the memory usage
         events = filterEventsInThePast(events, {preserveRruleEvents: true});
-        events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDays, preserveRruleEvents: true});
+        events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDaysToParse, preserveRruleEvents: true});
         
         events = flattenRruleEvents(events);
-        events = removeEventsWithRruleUntilInThePast(events, howManyDays);
+        events = removeEventsWithRruleUntilInThePast(events, howManyDaysToParse);
 
         events = filterExcludedDates(events);
 
         // after flatten the rrule events we have to filter again
         events = filterEventsInThePast(events);
-        events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDays});
+        events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDaysToParse});
 
         events = tagEvents(events, calendar.name);
         events = colorEvents(events, calendar.color);
@@ -42,7 +43,8 @@ router.get('/', async (req, res) => {
     grouppedEvents = groupEventsByDay(allEvents);
 
     res.send({
-        groupped: grouppedEvents
+        groupped: grouppedEvents.slice(0, howManyDaysToRespond)
+
     });
 });
 
