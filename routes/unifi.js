@@ -3,7 +3,6 @@ const router = express.Router();
 const axiosRaw = require('axios').default;
 const dayjs = require('dayjs');
 const https = require('https');
-const prettyBytes = require('pretty-bytes');
 
 
 router.get('/', async (req, res) => {
