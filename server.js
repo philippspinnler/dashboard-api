@@ -1,26 +1,3 @@
-/*
-MODULE_TESLA_CLIENT_ID
-MODULE_TESLA_CLIENT_SECRET
-MODULE_TESLA_EMAIL
-MODULE_TESLA_PASSWORD
-MODULE_TESLA_OPEN_CAGE_API_KEY
-
-MODULE_NETATMO_CLIENT_ID
-MODULE_NETATMO_CLIENT_SECRET
-MODULE_NETATMO_USERNAME
-MODULE_NETATMO_PASSWORD
-MODULE_NETATMO_DEVICE_ID
-
-MODULE_EOGUIDE_CLIENT_KEY
-MODULE_EOGUIDE_USERNAME
-MODULE_EOGUIDE_PASSWORD
-
-MODULE_WITHINGS_CLIENT_ID
-MODULE_WITHINGS_CLIENT_SECRET
-
-TOKEN
-*/
-
 'use strict';
 
 require('dotenv').config()
@@ -43,6 +20,7 @@ const ical = require('./routes/ical');
 const weather = require('./routes/weather');
 const sonos = require('./routes/sonos');
 const simpleQuote = require('./routes/simple-quote');
+const unifi = require('./routes/unifi');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
@@ -66,6 +44,7 @@ app.use('/ical', cache('5 minutes'), auth, ical);
 app.use('/weather', cache('1 hours'), auth, weather);
 app.use('/sonos', cache('5 seconds'), auth, sonos);
 app.use('/simple-quote', cache('5 seconds'), auth, simpleQuote);
+app.use('/unifi', cache('5 seconds'), auth, unifi);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);

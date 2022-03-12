@@ -28,6 +28,8 @@ router.get('/', async (req, res) => {
 
         events = filterExcludedDates(events);
 
+        events = flattenMultiDayEvents(events);
+
         // after flatten the rrule events we have to filter again
         events = filterEventsInThePast(events);
         events = filterEventsInTheFuture(events, {startDayMoreThanDaysInTheFuture: howManyDaysToParse});
@@ -110,6 +112,23 @@ function filterEventsInThePast(events, options={}) {
         return events.filter(event => event.end > dayjs().startOf('day') || event.rrule);
     }
     return events.filter(event => event.end > dayjs().startOf('day'));
+}
+
+function flattenMultiDayEvents(events) {
+    return events.flatMap(event => {
+        if (event.end.diff(event.start, 'hour') > 24 && !event.rrule) {
+            const flattenEvents = [];
+            const days = event.end.diff(event.start, 'day');
+            for (let x = 0; x < days; x++) {
+                const newEvent = {...event};
+                newEvent.start = event.start.add(x, 'day');
+                newEvent.end = newEvent.start.add(1, 'day');
+                flattenEvents.push(newEvent);
+            }
+            return flattenEvents;
+        }
+        return event;
+    });
 }
 
 function filterEventsInTheFuture(events, options={}) {
