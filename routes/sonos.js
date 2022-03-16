@@ -10,7 +10,7 @@ let refreshToken = getRefreshToken();
 
 function getRefreshToken() {
     try {
-        return fs.readFileSync('.sonos_refresh_token').toString();
+        return fs.readFileSync('.sonos_refresh_token').toString().trim();
     } catch (e) {
         return null;
     }
