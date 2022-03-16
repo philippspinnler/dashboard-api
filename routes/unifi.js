@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     getReadableFileSizeString = fileSizeInBytes => {
 
         var i = -1;
-        var byteUnits = [' kbit', ' Mbit', ' Gbit', ' Tbit'];
+        var byteUnits = [' Kbps', ' Mbps', ' Gbps', ' Tbps'];
         do {
             fileSizeInBytes = fileSizeInBytes / 1024;
             i++;
@@ -47,17 +47,12 @@ router.get('/', async (req, res) => {
         return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
         };
 
-    blubb = 1
     res.send({
         "latency": wan.latency,
         "currentUpBytes": wan["tx_bytes-r"],
         "currentDownBytes": wan["rx_bytes-r"],
         "currentUpFormatted": getReadableFileSizeString(wan["tx_bytes-r"]*8),
-        "currentDownFormatted": getReadableFileSizeString(wan["rx_bytes-r"]*8),
-        "speedtestDownBytes": 65536000,
-        "speedtestUpBytes": 6553600,
-        "speedtestDownFormatted": getReadableFileSizeString(65536000*8),
-        "speedtestUpFormatted":  getReadableFileSizeString(6553600*8)
+        "currentDownFormatted": getReadableFileSizeString(wan["rx_bytes-r"]*8)
     });
 });
 

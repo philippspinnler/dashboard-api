@@ -21,6 +21,7 @@ const weather = require('./routes/weather');
 const sonos = require('./routes/sonos');
 const simpleQuote = require('./routes/simple-quote');
 const unifi = require('./routes/unifi');
+const speedtest = require('./routes/speedtest');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
@@ -45,6 +46,7 @@ app.use('/weather', cache('1 hours'), auth, weather);
 app.use('/sonos', cache('5 seconds'), auth, sonos);
 app.use('/simple-quote', cache('5 seconds'), auth, simpleQuote);
 app.use('/unifi', cache('5 seconds'), auth, unifi);
+app.use('/speedtest', cache('5 seconds'), auth, speedtest);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
