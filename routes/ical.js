@@ -167,6 +167,22 @@ function flattenRruleEvents(events) {
             }
             event.start = event.start.add(interval, unit);
             event.end = event.end.add(interval, unit);
+
+            // TODO: make this work for all use cases
+            if (unit == 'month' && event.rrule.byday && event.rrule.byday == "3TH") {
+                let newStart = event.start.startOf('month');
+                if (newStart.day() > 4) {
+                    newStart = newStart.add(3, 'week');
+                } else {
+                    newStart = newStart.add(2, 'week');
+                }
+
+                newStart = newStart.day(4);
+                newStart = newStart.hour(event.start.hour()).minute(event.start.minute()).second(event.start.second());
+                let newEnd = newStart.add(event.end.diff(event.start, 'second'), 'second');
+                event.start = newStart;
+                event.end = newEnd;
+            }
         }
 
         blubb = 1;
