@@ -10,8 +10,8 @@ router.get('/', async (req, res) => {
     const result = [];
     try {
         for (const connection of connections) {
-            const connectionName = `${ connection[0]} -> ${ connection[1] }`;
-            
+            const connectionName = `${connection[0]} -> ${connection[1]}`;
+
             if (departures[connectionName]) {
                 const departureDate = new Date(departures[connectionName].departure);
                 if (departureDate > new Date()) {
@@ -20,8 +20,11 @@ router.get('/', async (req, res) => {
                 }
             }
 
-            const response = await axios.get(`https://timetable.search.ch/api/route.json?num=2&from=${connection[0]}&to=${connection[1]}${connection[2] == 'direct' ? '&direct=1' : ''}`);
-            
+            const from = encodeURIComponent(connection[0]);
+            const to = encodeURIComponent(connection[1]);
+
+            const response = await axios.get(`https://timetable.search.ch/api/route.json?num=2&from=${from}&to=${to}${connection[2] == 'direct' ? '&direct=1' : ''}`);
+
             let departure;
 
             for (const connection_response of response.data.connections) {
@@ -41,13 +44,13 @@ router.get('/', async (req, res) => {
                     departureFormatted: `${departure.getHours()}:${(departure.getMinutes() < 10 ? '0' : '') + departure.getMinutes()} Uhr`
                 };
             }
-           
+
             result.push(
                 departures[connectionName]
             );
         }
-        
-        res.send({connections: result});
+
+        res.send({ connections: result });
     } catch (e) {
         res.status(404).send({
             "error": `no route found (${e})`
