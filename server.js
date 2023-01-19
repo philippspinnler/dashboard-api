@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
   res.send('DAKBoard API');
 });
 
-app.use('/public-transportation', auth, publicTransportation);
+app.use('/public-transportation', auth, cache('2 minutes'), publicTransportation);
 app.use('/eo-guide', auth, cache('4 hours'), eoGuide);
 app.use('/netatmo', auth, cache('1 minutes'), netatmo);
 app.use('/tesla', auth, tesla);
