@@ -106,3 +106,4 @@ dist
 /*.request
 .withings_refresh_tokens
 .sonos_refresh_token
+.env_*
