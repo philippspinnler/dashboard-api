@@ -33,6 +33,7 @@ def get_data():
     elif device.is_playing_tv:
         is_playing_tv = True
         artist = "Fernseher"
+        song = "HDMI eARC"
         image = f"{base_url}/static/tv.jpg"
     else:
         artist = current_track["artist"]
