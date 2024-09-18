@@ -39,19 +39,19 @@ async def root():
 
 
 @app.get("/calendar")
-@cache(expire=10)
+@cache(expire=900)
 async def calendar():
     return get_events()
 
 
 @app.get("/netatmo")
-@cache(expire=1800)
+@cache(expire=900)
 async def netatmo():
     return get_data_netatmo()
 
 
 @app.get("/sonos")
-@cache(expire=60)
+@cache(expire=10)
 async def sonos():
     return get_data_sonos()
 
@@ -87,7 +87,7 @@ async def delete_file(filename: str = Form(...)):
 
 
 @app.get("/weather")
-@cache(expire=3600)
+@cache(expire=21_600)
 async def get_weather(
     lat: float = Query(47.4176969, description="Latitude"), lon: float = Query(7.7612123, description="Longitude")
 ):
