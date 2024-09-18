@@ -14,6 +14,7 @@ icalendar = "^5.0.13"
 soco = "^0.30.4"
 fastapi = {extras = ["standard"], version = "^0.114.2"}
 pyatmo = "^8.1.0"
+fastapi-cache2 = "^0.2.2"
 
 
 [build-system]

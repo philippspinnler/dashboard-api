@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.responses import HTMLResponse
 from app.plugins.ical import get_events
@@ -8,8 +10,18 @@ from app.plugins.album import album_uploade_page, upload_image, delete_image, ge
 from app.plugins.weather import get_data as get_data_weather
 from app.plugins.publictransportation import get_data as get_data_publictransportation
 from fastapi.staticfiles import StaticFiles
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    FastAPICache.init(InMemoryBackend())
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
@@ -18,21 +30,25 @@ async def root():
 
 
 @app.get("/calendar")
+@cache(expire=600)
 async def calendar():
     return get_events()
 
 
 @app.get("/netatmo")
+@cache(expire=1800)
 async def netatmo():
     return get_data_netatmo()
 
 
 @app.get("/sonos")
+@cache(expire=60)
 async def sonos():
     return get_data_sonos()
 
 
 @app.get("/speedtest")
+@cache(expire=1800)
 async def speedtest():
     return get_data_speedtest()
 
@@ -41,6 +57,7 @@ app.mount("/album/images", StaticFiles(directory="images"), name="images")
 
 
 @app.get("/album")
+@cache(expire=1800)
 async def album():
     return get_data()
 
@@ -61,6 +78,7 @@ async def delete_file(filename: str = Form(...)):
 
 
 @app.get("/weather")
+@cache(expire=3600)
 async def get_weather(
     lat: float = Query(47.4176969, description="Latitude"), lon: float = Query(7.7612123, description="Longitude")
 ):
@@ -68,5 +86,6 @@ async def get_weather(
 
 
 @app.get("/public-transportation")
+@cache(expire=300)
 async def get_departures(connections: str = '[["Hölstein, Süd", "Liestal, Bahnhof", "direct"]]'):
     return get_data_publictransportation(connections)
