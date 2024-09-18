@@ -31,11 +31,11 @@ def get_data():
 
     return {
         "total": total,
-        "totalFormatted": total_formatted,
-        "latestReview": {
+        "total_formatted": total_formatted,
+        "latest_review": {
             "review": review_text,
-            "reviewFormatted": review_formatted,
+            "review_formatted": review_formatted,
             "stars": stars,
-            "starsFormatted": stars_formatted,
+            "stars_formatted": stars_formatted,
         },
     }
