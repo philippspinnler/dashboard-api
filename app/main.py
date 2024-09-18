@@ -4,7 +4,7 @@ from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.responses import HTMLResponse
 from app.plugins.ical import get_events
 from app.plugins.netatmo import get_data as get_data_netatmo
-from app.plugins.sonos import get_data as get_data_sonos
+from app.plugins.sonos import get_data as get_data_sonos, proxy
 from app.plugins.speedtest import get_data as get_data_speedtest
 from app.plugins.album import album_uploade_page, upload_image, delete_image, get_data
 from app.plugins.weather import get_data as get_data_weather
@@ -104,3 +104,8 @@ async def get_departures(connections: str = '[["Hölstein, Süd", "Liestal, Bahn
 @cache(expire=21_600)
 async def eo_guide():
     return get_data_eoguide()
+
+
+@app.get("/sonos/image-proxy")
+async def proxy_image(url: str = Query(..., description="The full URL of the image to proxy")):
+    return proxy(url)

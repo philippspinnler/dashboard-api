@@ -1,3 +1,6 @@
+from urllib.parse import urlparse
+from fastapi import HTTPException, Response
+import httpx
 from soco.discovery import by_name
 import re
 from app import config
@@ -25,12 +28,13 @@ def get_data():
             image = f"https://cdn-profiles.tunein.com/{sid}/images/logoq.jpg"
         else:
             image = None
-    if device.is_playing_tv:
+    elif device.is_playing_tv:
         is_playing_tv = True
     else:
         artist = current_track["artist"]
         song = current_track["title"]
-        image = current_track["album_art"]
+        base_url = config.get_attribute(["sonos", "album_art_base_url"])
+        image = f"{base_url}/sonos/image-proxy/?url={current_track['album_art']}"
 
     playing = {
         "artist": artist,
@@ -41,3 +45,19 @@ def get_data():
     }
 
     return playing
+
+
+def proxy(url: str):
+    parsed_url = urlparse(url)
+    if parsed_url.scheme not in ["http", "https"]:
+        raise HTTPException(status_code=400, detail="Invalid URL scheme. Only 'http' and 'https' are supported.")
+
+    try:
+        response = httpx.get(url)
+    except httpx.RequestError:
+        raise HTTPException(status_code=400, detail="Failed to fetch the URL.")
+
+    if response.status_code == 200:
+        return Response(content=response.content, media_type=response.headers.get("content-type"))
+    else:
+        raise HTTPException(status_code=response.status_code, detail="Image not found or inaccessible.")
