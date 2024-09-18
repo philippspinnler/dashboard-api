@@ -62,6 +62,7 @@ def get_events_in_next_days(cal, days=3):
                     {
                         "summary": event.get("summary").to_ical().decode("utf-8"),
                         "start_date": ensure_timezone(occurrence),
+                        "start_time": ensure_timezone(occurrence).strftime("%H:%M"),
                         "all_day": all_day,
                     }
                 )
@@ -71,6 +72,7 @@ def get_events_in_next_days(cal, days=3):
                     {
                         "summary": event.get("summary").to_ical().decode("utf-8"),
                         "start_date": ensure_timezone(start_date),
+                        "start_time": ensure_timezone(start_date).strftime("%H:%M"),
                         "all_day": all_day,
                     }
                 )
@@ -136,8 +138,7 @@ def handle_birthdays(events):
             year_part = parts[-1]
 
             # Remove the year from the name_part to clean the summary
-            name_without_year = " ".join(parts[:-1])
-            summary = f"Geburtstag {name_without_year}"
+            name = " ".join(parts[:-1])
 
             try:
                 year = int(year_part)
@@ -154,9 +155,13 @@ def handle_birthdays(events):
         else:
             birthday = False
 
-        event["summary"] = summary
-        event["birthday"] = birthday
-        event["age"] = age
+        if birthday:
+            event["birthday"] = {
+                "name": name,
+                "age": age,
+            }
+        else:
+            event["birthday"] = None
 
         new_events.append(event)
 
