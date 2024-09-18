@@ -8,7 +8,7 @@ import pytz
 from app import config
 
 local_time_zone = pytz.timezone("Europe/Zurich")
-locale.setlocale(locale.LC_TIME, "de_DE.UTF-8")
+locale.setlocale(locale.LC_TIME, "de_CH.UTF-8")
 
 
 def parse_webcal(url):

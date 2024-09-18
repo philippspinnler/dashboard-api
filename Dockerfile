@@ -8,6 +8,15 @@ FROM python:3.12-slim
 WORKDIR /app
 COPY --from=builder /app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apt-get update && \
+    apt-get install -y locales && \
+    locale-gen de_CH.UTF-8
+
+ENV LANG=de_CH.UTF-8
+ENV LANGUAGE=de_CH:de
+ENV LC_ALL=de_CH.UTF-8
+
 COPY . .
 EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
