@@ -13,7 +13,7 @@ RUN apt-get update && \
     apt-get install -y locales-all
 
 COPY . .
-EXPOSE 8000
+EXPOSE 8100
 ENV PYTHONUNBUFFERED=1
 
-CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "8100"]
