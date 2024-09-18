@@ -108,7 +108,11 @@ def group_events_by_day(events):
 
         # Add event to the corresponding day group
         if event_date not in temp_grouped_events:
-            temp_grouped_events[event_date] = {"day": event_day, "date": event_date.strftime("%Y-%m-%d"), "events": []}
+            temp_grouped_events[event_date] = {
+                "day": event_day,
+                "date": event_date.strftime("%d. %B"),
+                "events": [],
+            }
 
         temp_grouped_events[event_date]["events"].append(event)
 

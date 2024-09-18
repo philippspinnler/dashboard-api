@@ -17,6 +17,8 @@ def get_data():
     image = None
     is_playing_tv = False
 
+    base_url = config.get_attribute(["base_url"])
+
     if device.is_playing_radio:
         artist = current_media["channel"]
         song = current_track["title"]
@@ -30,10 +32,11 @@ def get_data():
             image = None
     elif device.is_playing_tv:
         is_playing_tv = True
+        artist = "Fernseher"
+        image = f"{base_url}/static/tv.jpg"
     else:
         artist = current_track["artist"]
         song = current_track["title"]
-        base_url = config.get_attribute(["base_url"])
         encoded_album_art = urlencode({"url": current_track["album_art"]})
         image = f"{base_url}/sonos/image-proxy/?{encoded_album_art}"
 

@@ -109,3 +109,6 @@ async def eo_guide():
 @app.get("/sonos/image-proxy")
 async def proxy_image(url: str = Query(..., description="The full URL of the image to proxy")):
     return proxy(url)
+
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
