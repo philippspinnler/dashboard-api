@@ -9,6 +9,7 @@ from app.plugins.speedtest import get_data as get_data_speedtest
 from app.plugins.album import album_uploade_page, upload_image, delete_image, get_data
 from app.plugins.weather import get_data as get_data_weather
 from app.plugins.publictransportation import get_data as get_data_publictransportation
+from app.plugins.eoguide import get_data as get_data_eoguide
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -38,7 +39,7 @@ async def root():
 
 
 @app.get("/calendar")
-@cache(expire=600)
+@cache(expire=10)
 async def calendar():
     return get_events()
 
@@ -97,3 +98,9 @@ async def get_weather(
 @cache(expire=300)
 async def get_departures(connections: str = '[["Hölstein, Süd", "Liestal, Bahnhof", "direct"]]'):
     return get_data_publictransportation(connections)
+
+
+@app.get("/eo-guide")
+@cache(expire=21_600)
+async def eo_guide():
+    return get_data_eoguide()
