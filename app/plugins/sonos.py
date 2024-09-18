@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 from fastapi import HTTPException, Response
 import httpx
 from soco.discovery import by_name
@@ -33,8 +33,9 @@ def get_data():
     else:
         artist = current_track["artist"]
         song = current_track["title"]
-        base_url = config.get_attribute(["sonos", "album_art_base_url"])
-        image = f"{base_url}/sonos/image-proxy/?url={current_track['album_art']}"
+        base_url = config.get_attribute(["base_url"])
+        encoded_album_art = urlencode({"url": current_track["album_art"]})
+        image = f"{base_url}/sonos/image-proxy/?{encoded_album_art}"
 
     playing = {
         "artist": artist,
