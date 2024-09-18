@@ -11,7 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN apt-get update && \
     apt-get install -y locales && \
-    locale-gen de_CH.UTF-8
+    locale-gen de_CH.UTF-8 && \
+    dpkg-reconfigure locales
 
 ENV LANG=de_CH.UTF-8
 ENV LANGUAGE=de_CH:de
