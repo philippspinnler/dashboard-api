@@ -7,10 +7,13 @@ from app import config
 
 
 def get_data():
-    device = by_name(config.get_attribute(["sonos", "device_name"]))
+    for device in config.get_attribute(["sonos", "devices"]):
+        device = by_name(device)
+        current_transport = device.get_current_transport_info()
+        if current_transport["current_transport_state"] == "PLAYING":
+            break
     current_track = device.get_current_track_info()
     current_media = device.get_current_media_info()
-    current_transport = device.get_current_transport_info()
 
     artist = None
     song = None
