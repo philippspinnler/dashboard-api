@@ -26,11 +26,11 @@ def get_data():
         artist = current_media["channel"]
         song = current_track["title"]
 
-        sid_match = re.search(r"sid=([^\&]+)", current_media["uri"])
+        sid_match = re.search(r"s\d{5}", current_media["uri"])
 
         if sid_match:
-            sid = sid_match.group(1)
-            image = f"https://cdn-profiles.tunein.com/{sid}/images/logoq.jpg"
+            sid = sid_match.group()
+            image = f"https://cdn-profiles.tunein.com/{sid}/images/logod.jpg"
         else:
             image = None
     elif device.is_playing_tv:
