@@ -139,23 +139,29 @@ def handle_birthdays(events):
 
             # Extract the year part from the name_part
             parts = name_part.split()
-            year_part = parts[-1]
 
-            # Remove the year from the name_part to clean the summary
-            name = " ".join(parts[:-1])
-
-            try:
-                year = int(year_part)
-
-                # If it's a 2-digit year, assume it's in the 1900s (e.g., 85 -> 1985)
-                if year < 100:
-                    year += 1900
-
-                # Calculate the age based on the current year
-                current_year = datetime.now().year
-                age = current_year - year
-            except ValueError:
+            if len(parts) == 1:
+                # If there's only one part, assume it's the name
+                name = parts[0]
                 age = None
+            else:
+                year_part = parts[-1]
+
+                # Remove the year from the name_part to clean the summary
+                name = " ".join(parts[:-1])
+
+                try:
+                    year = int(year_part)
+
+                    # If it's a 2-digit year, assume it's in the 1900s (e.g., 85 -> 1985)
+                    if year < 100:
+                        year += 1900
+
+                    # Calculate the age based on the current year
+                    current_year = datetime.now().year
+                    age = current_year - year
+                except ValueError:
+                    age = None
         else:
             birthday = False
 
