@@ -6,7 +6,8 @@ from app.plugins.ical import get_events
 from app.plugins.netatmo import get_data as get_data_netatmo
 from app.plugins.sonos import get_data as get_data_sonos, proxy
 from app.plugins.speedtest import get_data as get_data_speedtest
-from app.plugins.album import album_uploade_page, upload_image, delete_image, get_data
+# from app.plugins.album import album_uploade_page, upload_image, delete_image, get_data
+from app.plugins.icloud_album import get_data
 from app.plugins.weather import get_data as get_data_weather
 from app.plugins.publictransportation import get_data as get_data_publictransportation
 from app.plugins.eoguide import get_data as get_data_eoguide
@@ -62,7 +63,7 @@ async def speedtest():
     return get_data_speedtest()
 
 
-app.mount("/album/images", StaticFiles(directory="images"), name="images")
+"""app.mount("/album/images", StaticFiles(directory="images"), name="images")
 
 
 @app.get("/album")
@@ -84,6 +85,12 @@ async def upload_file(file: UploadFile = File(...)):
 @app.post("/album/delete-image/")
 async def delete_file(filename: str = Form(...)):
     return delete_image(filename)
+"""
+
+@app.get("/album")
+@cache(expire=1800)
+async def album():
+    return get_data()
 
 
 @app.get("/weather")
