@@ -37,7 +37,7 @@ def get_data():
         image_url = f"https://{img['url_location']}{img['url_path']}"
         images.append(image_url)
     
-    return images
+    return {"images": images}
 
 def _get_base_url(token: str) -> str:
     BASE_62_CHAR_SET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
