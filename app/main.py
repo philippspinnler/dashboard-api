@@ -94,7 +94,7 @@ async def album():
 
 
 @app.get("/weather")
-@cache(expire=21_600)
+@cache(expire=3600)
 async def get_weather(
     lat: float = Query(47.4176969, description="Latitude"), lon: float = Query(7.7612123, description="Longitude")
 ):
