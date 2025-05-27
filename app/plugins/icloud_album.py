@@ -99,7 +99,7 @@ def get_api_response(base_url: str) -> Dict[str, Any]:
     :return: Parsed JSON response containing metadata and photos.
     """
     url = f"{base_url}webstream"
-    response = httpx.post(url, headers=HEADERS, json={"streamCtag": None})
+    response = httpx.post(url, headers=HEADERS, json={"streamCtag": None}, timeout=60)
     response.raise_for_status()
     data = response.json()
 
