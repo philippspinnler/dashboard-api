@@ -30,7 +30,7 @@ def get_data():
 
         # 4. Build image URLs
         image_urls = [
-            f"{IMMICH_URL}/api/assets/{asset['id']}/original"
+            f"{IMMICH_URL}/api/assets/{asset['id']}/thumbnail?size=fullsize&key={config.get_attribute(['immich', 'share_key'])}&c={config.get_attribute(['immich', 'c'])}"
             for asset in assets
         ]
 
