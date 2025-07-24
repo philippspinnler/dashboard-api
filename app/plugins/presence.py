@@ -8,8 +8,8 @@ TOKEN = config.get_attribute(['home_assistant', 'token'])
 person_entities = config.get_attribute(['home_assistant', 'person_entities'])
 
 def get_data():
-    persons = []
-    away = []
+    persons_home = []
+    persons_away = []
 
     with Client(f"{URL}/api", TOKEN) as client:
         for entity_id in person_entities:
@@ -30,10 +30,10 @@ def get_data():
             }
             
             if state.state == "home":
-                persons.append(person_entry)
+                persons_home.append(person_entry)
             else:
-                persons.append(person_entry)
+                persons_away.append(person_entry)
 
     return {
-        "persons": persons
+        "persons": persons_home + persons_away
     }
