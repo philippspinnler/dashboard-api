@@ -34,4 +34,6 @@ def get_data():
             else:
                 persons.append(person_entry)
 
-    return persons
+    return {
+        "persons": persons
+    }
