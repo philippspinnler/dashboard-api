@@ -11,6 +11,7 @@ from app.plugins.immich import get_data as get_data_album
 from app.plugins.weather import get_data as get_data_weather
 from app.plugins.publictransportation import get_data as get_data_publictransportation
 from app.plugins.eoguide import get_data as get_data_eoguide
+from app.plugins.presence import get_data as get_data_presence
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -117,5 +118,10 @@ async def eo_guide():
 async def proxy_image(url: str = Query(..., description="The full URL of the image to proxy")):
     return proxy(url)
 
+
+@app.get("/presence")
+@cache(expire=120)
+async def presence():
+    return get_data_presence()
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
