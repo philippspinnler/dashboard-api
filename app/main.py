@@ -89,7 +89,7 @@ async def delete_file(filename: str = Form(...)):
 """
 
 @app.get("/album")
-@cache(expire=300)
+@cache(expire=21_600)
 async def album():
     return get_data_album()
 
