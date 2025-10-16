@@ -49,12 +49,17 @@ async def get_images(token: str) -> Dict[str, Any]:
     :param token: The authentication token.
     :return: A dictionary containing metadata and enriched photos.
     """
-    async with httpx.AsyncClient() as client:
+    # Configure client with better connection limits and HTTP/2
+    limits = httpx.Limits(max_keepalive_connections=20, max_connections=50)
+    timeout = httpx.Timeout(30.0, connect=10.0)
+    
+    async with httpx.AsyncClient(limits=limits, timeout=timeout, http2=True) as client:
         base_url = get_base_url(token)
         redirected_base_url = await get_redirected_base_url(client, base_url, token)
         api_response = await get_api_response(client, redirected_base_url)
 
-        chunks = chunk_list(api_response["photoGuids"], 25)
+        # Increase chunk size to reduce number of requests (50 instead of 25)
+        chunks = chunk_list(api_response["photoGuids"], 50)
         
         # Fetch all chunks in parallel
         chunk_results = await asyncio.gather(
@@ -95,7 +100,12 @@ async def get_redirected_base_url(client: httpx.AsyncClient, base_url: str, toke
     :return: The redirected URL or the original URL if no redirection occurred.
     """
     url = f"{base_url}webstream"
-    response = await client.post(url, headers=HEADERS, json={"streamCtag": None}, follow_redirects=False)
+    response = await client.post(
+        url, 
+        headers=HEADERS, 
+        json={"streamCtag": None}, 
+        follow_redirects=False
+    )
 
     if response.status_code == 330:
         new_host = response.json()["X-Apple-MMe-Host"]
@@ -112,7 +122,7 @@ async def get_api_response(client: httpx.AsyncClient, base_url: str) -> Dict[str
     :return: Parsed JSON response containing metadata and photos.
     """
     url = f"{base_url}webstream"
-    response = await client.post(url, headers=HEADERS, json={"streamCtag": None}, timeout=60)
+    response = await client.post(url, headers=HEADERS, json={"streamCtag": None})
     response.raise_for_status()
     data = response.json()
 
@@ -164,9 +174,10 @@ async def get_urls(client: httpx.AsyncClient, base_url: str, photo_guids: List[s
     url = f"{base_url}webasseturls"
     response = await client.post(url, headers=HEADERS, json={"photoGuids": photo_guids})
     response.raise_for_status()
+    data = response.json()
     return {
         item_id: f"https://{item['url_location']}{item['url_path']}"
-        for item_id, item in response.json()["items"].items()
+        for item_id, item in data["items"].items()
     }
 
 def enrich_images_with_urls(api_response: Dict[str, Any], urls: Dict[str, str]) -> List[Dict[str, Any]]:

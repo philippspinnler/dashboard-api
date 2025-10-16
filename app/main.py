@@ -7,7 +7,8 @@ from app.plugins.netatmo import get_data as get_data_netatmo
 from app.plugins.sonos import get_data as get_data_sonos, proxy
 from app.plugins.speedtest import get_data as get_data_speedtest
 # from app.plugins.album import album_uploade_page, upload_image, delete_image, get_data
-from app.plugins.icloud_album import get_data as get_data_album
+from app.plugins.icloud_album import get_data as get_data_icloud
+from app.plugins.immich import get_data as get_data_immich
 from app.plugins.weather import get_data as get_data_weather
 from app.plugins.publictransportation import get_data as get_data_publictransportation
 from app.plugins.eoguide import get_data as get_data_eoguide
@@ -91,7 +92,17 @@ async def delete_file(filename: str = Form(...)):
 @app.get("/album")
 @cache(expire=21_600)
 async def album():
-    return await get_data_album()
+    from app import config
+    
+    # Get the album provider from config, default to "immich"
+    provider = config.get_attribute(["album_provider"]) or "immich"
+    
+    if provider == "immich":
+        return await get_data_immich()
+    elif provider == "icloud":
+        return await get_data_icloud()
+    else:
+        raise ValueError(f"Invalid album provider: {provider}. Valid options are 'immich' or 'icloud'.")
 
 
 @app.get("/weather")

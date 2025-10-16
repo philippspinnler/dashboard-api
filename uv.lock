@@ -247,7 +247,7 @@ dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-cache2" },
     { name = "homeassistant-api" },
-    { name = "httpx" },
+    { name = "httpx", extra = ["http2"] },
     { name = "icalendar" },
     { name = "pyatmo" },
     { name = "python-dateutil" },
@@ -260,7 +260,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.5" },
     { name = "fastapi-cache2", specifier = ">=0.2.2" },
     { name = "homeassistant-api", specifier = ">=5.0.0" },
-    { name = "httpx", specifier = ">=0.28.0" },
+    { name = "httpx", extras = ["http2"], specifier = ">=0.28.0" },
     { name = "icalendar", specifier = ">=6.1.0" },
     { name = "pyatmo", specifier = ">=8.1.0" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
@@ -411,6 +411,19 @@ wheels = [
 ]
 
 [[package]]
+name = "h2"
+version = "4.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "hpack" },
+    { name = "hyperframe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/17/afa56379f94ad0fe8defd37d6eb3f89a25404ffc71d4d848893d270325fc/h2-4.3.0.tar.gz", hash = "sha256:6c59efe4323fa18b47a632221a1888bd7fde6249819beda254aeca909f221bf1", size = 2152026 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/69/b2/119f6e6dcbd96f9069ce9a2665e0146588dc9f88f29549711853645e736a/h2-4.3.0-py3-none-any.whl", hash = "sha256:c438f029a25f7945c69e0ccf0fb951dc3f73a5f6412981daee861431b70e2bdd", size = 61779 },
+]
+
+[[package]]
 name = "homeassistant-api"
 version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -426,6 +439,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/88/e9/576ab6d080e4d29a38b3ce6b5fc8cf64801a1bc8d62a19e946fcb9a702c1/homeassistant_api-5.0.0.tar.gz", hash = "sha256:50d293b60227ad526d8c76f55959546dc6e18c13ad4d7d347879a6e78c30d2b6", size = 31695 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1c/d9/0ff4b551ca41f082313bcab6b0ba44340247eab5dc42f2024d73de9e22ba/homeassistant_api-5.0.0-py3-none-any.whl", hash = "sha256:d5bde1f1a8da19ca7450208cd171be74f248481f83fd7a9326b18b41e0945466", size = 41857 },
+]
+
+[[package]]
+name = "hpack"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/48/71de9ed269fdae9c8057e5a4c0aa7402e8bb16f2c6e90b3aa53327b113f8/hpack-4.1.0.tar.gz", hash = "sha256:ec5eca154f7056aa06f196a557655c5b009b382873ac8d1e66e79e87535f1dca", size = 51276 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/c6/80c95b1b2b94682a72cbdbfb85b81ae2daffa4291fbfa1b1464502ede10d/hpack-4.1.0-py3-none-any.whl", hash = "sha256:157ac792668d995c657d93111f46b4535ed114f0c9c8d672271bbec7eae1b496", size = 34357 },
 ]
 
 [[package]]
@@ -483,6 +505,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/10/df/676b7cf674dd1bdc71a64ad393c89879f75e4a0ab8395165b498262ae106/httpx-0.28.0.tar.gz", hash = "sha256:0858d3bab51ba7e386637f22a61d8ccddaeec5f3fe4209da3a6168dbb91573e0", size = 141307 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/fb/a19866137577ba60c6d8b69498dc36be479b13ba454f691348ddf428f185/httpx-0.28.0-py3-none-any.whl", hash = "sha256:dc0b419a0cfeb6e8b34e85167c0da2671206f5095f1baa9663d23bcfd6b535fc", size = 73551 },
+]
+
+[package.optional-dependencies]
+http2 = [
+    { name = "h2" },
+]
+
+[[package]]
+name = "hyperframe"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/e7/94f8232d4a74cc99514c13a9f995811485a6903d48e5d952771ef6322e30/hyperframe-6.1.0.tar.gz", hash = "sha256:f630908a00854a7adeabd6382b43923a4c4cd4b821fcb527e6ab9e15382a3b08", size = 26566 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/30/47d0bf6072f7252e6521f3447ccfa40b421b6824517f82854703d0f5a98b/hyperframe-6.1.0-py3-none-any.whl", hash = "sha256:b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5", size = 13007 },
 ]
 
 [[package]]
