@@ -55,13 +55,14 @@ def get_data():
     return playing
 
 
-def proxy(url: str):
+async def proxy(url: str):
     parsed_url = urlparse(url)
     if parsed_url.scheme not in ["http", "https"]:
         raise HTTPException(status_code=400, detail="Invalid URL scheme. Only 'http' and 'https' are supported.")
 
     try:
-        response = httpx.get(url)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
     except httpx.RequestError:
         raise HTTPException(status_code=400, detail="Failed to fetch the URL.")
 

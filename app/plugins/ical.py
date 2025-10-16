@@ -12,8 +12,9 @@ local_time_zone = pytz.timezone("Europe/Zurich")
 locale.setlocale(locale.LC_TIME, "de_CH.UTF-8")
 
 
-def parse_webcal(url):
-    response = httpx.get(url)
+async def parse_webcal(url):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
     cal = Calendar.from_ical(response.text)
     return cal
 
@@ -80,8 +81,8 @@ def get_events_in_next_days(cal, days=3):
     return events_in_next_three_days
 
 
-def get_events_from_url(url, name, color):
-    cal = parse_webcal(url)
+async def get_events_from_url(url, name, color):
+    cal = await parse_webcal(url)
     events = get_events_in_next_days(cal, days=5)
     events = [{**event, "name": name, "color": color} for event in events]
     return events
@@ -178,12 +179,12 @@ def handle_birthdays(events):
     return new_events
 
 
-def get_events():
+async def get_events():
     calendars = config.get_attribute(["calendars"])
 
     all_events = []
     for calendar in calendars:
-        events = get_events_from_url(
+        events = await get_events_from_url(
             url=calendar.get("icalUrl"), name=calendar.get("name"), color=calendar.get("color")
         )
         all_events.extend(events)

@@ -4,7 +4,7 @@ import pytz
 from app import config
 
 
-def get_data(lat: float = 47.4176969, lon: float = 7.7612123):
+async def get_data(lat: float = 47.4176969, lon: float = 7.7612123):
     units = "metric"
     lang = "de"
     exclude = "minutely,hourly,alerts"
@@ -16,7 +16,8 @@ def get_data(lat: float = 47.4176969, lon: float = 7.7612123):
         f"&units={units}&lang={lang}"
     )
 
-    response = httpx.get(url)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
     data = response.json()
 
     current_weather = {

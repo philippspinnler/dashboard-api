@@ -43,13 +43,13 @@ async def root():
 @app.get("/calendar")
 @cache(expire=900)
 async def calendar():
-    return get_events()
+    return await get_events()
 
 
 @app.get("/netatmo")
 @cache(expire=900)
 async def netatmo():
-    return get_data_netatmo()
+    return await get_data_netatmo()
 
 
 @app.get("/sonos")
@@ -61,7 +61,7 @@ async def sonos():
 @app.get("/speedtest")
 @cache(expire=1800)
 async def speedtest():
-    return get_data_speedtest()
+    return await get_data_speedtest()
 
 
 """app.mount("/album/images", StaticFiles(directory="images"), name="images")
@@ -91,7 +91,7 @@ async def delete_file(filename: str = Form(...)):
 @app.get("/album")
 @cache(expire=21_600)
 async def album():
-    return get_data_album()
+    return await get_data_album()
 
 
 @app.get("/weather")
@@ -99,29 +99,29 @@ async def album():
 async def get_weather(
     lat: float = Query(47.4176969, description="Latitude"), lon: float = Query(7.7612123, description="Longitude")
 ):
-    return get_data_weather(lat=lat, lon=lon)
+    return await get_data_weather(lat=lat, lon=lon)
 
 
 @app.get("/public-transportation")
 @cache(expire=300)
 async def get_departures(connections: str = '[["Hölstein, Süd", "Liestal, Bahnhof", "direct"]]'):
-    return get_data_publictransportation(connections)
+    return await get_data_publictransportation(connections)
 
 
 @app.get("/eo-guide")
 @cache(expire=21_600)
 async def eo_guide():
-    return get_data_eoguide()
+    return await get_data_eoguide()
 
 
 @app.get("/sonos/image-proxy")
 async def proxy_image(url: str = Query(..., description="The full URL of the image to proxy")):
-    return proxy(url)
+    return await proxy(url)
 
 
 @app.get("/presence")
 @cache(expire=120)
 async def presence():
-    return get_data_presence()
+    return await get_data_presence()
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

@@ -8,37 +8,39 @@ CLIENT_ID = config.get_attribute(["netatmo", "client_id"])
 CLIENT_SECRET = config.get_attribute(["netatmo", "client_secret"])
 
 
-def get_data():
+async def get_data():
     access_token = config.get_attribute(["netatmo", "access_token"])
     refresh_token = config.get_attribute(["netatmo", "refresh_token"])
 
     if not access_token:
         return missing_auth_response()
 
-    response = httpx.get(
-        f"{API_URL}?device_id={DEVICE_ID}&get_favorites=false",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{API_URL}?device_id={DEVICE_ID}&get_favorites=false",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
 
     if response.status_code == 403:
-        if renew_token(refresh_token):
-            return get_data()
+        if await renew_token(refresh_token):
+            return await get_data()
         else:
             return auth_error_response()
 
     return extract_data(response)
 
 
-def renew_token(refresh_token):
-    response = httpx.post(
-        TOKEN_URL,
-        data={
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
-    )
+async def renew_token(refresh_token):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            TOKEN_URL,
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+            },
+        )
 
     if response.status_code == 200:
         tokens = response.json()
