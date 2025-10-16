@@ -1,5 +1,6 @@
 import httpx
 import json
+import asyncio
 from typing import Dict, Any, List, Union
 from app import config
 
@@ -54,9 +55,15 @@ async def get_images(token: str) -> Dict[str, Any]:
         api_response = await get_api_response(client, redirected_base_url)
 
         chunks = chunk_list(api_response["photoGuids"], 25)
+        
+        # Fetch all chunks in parallel
+        chunk_results = await asyncio.gather(
+            *[get_urls(client, redirected_base_url, chunk) for chunk in chunks]
+        )
+        
+        # Merge all results into a single dictionary
         all_urls = {}
-        for chunk in chunks:
-            chunk_urls = await get_urls(client, redirected_base_url, chunk)
+        for chunk_urls in chunk_results:
             all_urls.update(chunk_urls)
 
         return {
