@@ -17,13 +17,13 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
-def get_data() -> Dict[str, List[str]]:
+async def get_data() -> Dict[str, List[str]]:
     """
     Fetches enriched image URLs from iCloud shared albums.
     :return: A dictionary with a list of image URLs.
     """
     token = config.get_attribute(["icloud_album_id"])
-    images = get_images(token)
+    images = await get_images(token)
 
     urls = [
         max(photo["derivatives"].values(), key=lambda x: x["fileSize"])["url"]
@@ -42,23 +42,27 @@ def chunk_list(lst: List[Any], chunk_size: int) -> List[List[Any]]:
     """
     return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
-def get_images(token: str) -> Dict[str, Any]:
+async def get_images(token: str) -> Dict[str, Any]:
     """
     Retrieves images and their metadata enriched with URLs.
     :param token: The authentication token.
     :return: A dictionary containing metadata and enriched photos.
     """
-    base_url = get_base_url(token)
-    redirected_base_url = get_redirected_base_url(base_url, token)
-    api_response = get_api_response(redirected_base_url)
+    async with httpx.AsyncClient() as client:
+        base_url = get_base_url(token)
+        redirected_base_url = await get_redirected_base_url(client, base_url, token)
+        api_response = await get_api_response(client, redirected_base_url)
 
-    chunks = chunk_list(api_response["photoGuids"], 25)
-    all_urls = {guid: url for chunk in chunks for guid, url in get_urls(redirected_base_url, chunk).items()}
+        chunks = chunk_list(api_response["photoGuids"], 25)
+        all_urls = {}
+        for chunk in chunks:
+            chunk_urls = await get_urls(client, redirected_base_url, chunk)
+            all_urls.update(chunk_urls)
 
-    return {
-        "metadata": api_response["metadata"],
-        "photos": enrich_images_with_urls(api_response, all_urls),
-    }
+        return {
+            "metadata": api_response["metadata"],
+            "photos": enrich_images_with_urls(api_response, all_urls),
+        }
 
 def get_base_url(token: str) -> str:
     """
@@ -75,15 +79,16 @@ def get_base_url(token: str) -> str:
     base_url = f"https://p{partition:02d}-sharedstreams.icloud.com/{token}/sharedstreams/"
     return base_url
 
-def get_redirected_base_url(base_url: str, token: str) -> str:
+async def get_redirected_base_url(client: httpx.AsyncClient, base_url: str, token: str) -> str:
     """
     Resolves potential redirections for the base URL.
+    :param client: The httpx AsyncClient instance.
     :param base_url: The original base URL.
     :param token: The authentication token.
     :return: The redirected URL or the original URL if no redirection occurred.
     """
     url = f"{base_url}webstream"
-    response = httpx.post(url, headers=HEADERS, json={"streamCtag": None}, follow_redirects=False)
+    response = await client.post(url, headers=HEADERS, json={"streamCtag": None}, follow_redirects=False)
 
     if response.status_code == 330:
         new_host = response.json()["X-Apple-MMe-Host"]
@@ -92,14 +97,15 @@ def get_redirected_base_url(base_url: str, token: str) -> str:
     response.raise_for_status()
     return base_url
 
-def get_api_response(base_url: str) -> Dict[str, Any]:
+async def get_api_response(client: httpx.AsyncClient, base_url: str) -> Dict[str, Any]:
     """
     Retrieves metadata and photos from the API.
+    :param client: The httpx AsyncClient instance.
     :param base_url: The API base URL.
     :return: Parsed JSON response containing metadata and photos.
     """
     url = f"{base_url}webstream"
-    response = httpx.post(url, headers=HEADERS, json={"streamCtag": None}, timeout=60)
+    response = await client.post(url, headers=HEADERS, json={"streamCtag": None}, timeout=60)
     response.raise_for_status()
     data = response.json()
 
@@ -140,15 +146,16 @@ def parse_date(date: str) -> Union[str, None]:
     except Exception:
         return None
 
-def get_urls(base_url: str, photo_guids: List[str]) -> Dict[str, str]:
+async def get_urls(client: httpx.AsyncClient, base_url: str, photo_guids: List[str]) -> Dict[str, str]:
     """
     Retrieves URLs for a batch of photo GUIDs.
+    :param client: The httpx AsyncClient instance.
     :param base_url: The API base URL.
     :param photo_guids: A list of photo GUIDs.
     :return: A dictionary mapping GUIDs to URLs.
     """
     url = f"{base_url}webasseturls"
-    response = httpx.post(url, headers=HEADERS, json={"photoGuids": photo_guids})
+    response = await client.post(url, headers=HEADERS, json={"photoGuids": photo_guids})
     response.raise_for_status()
     return {
         item_id: f"https://{item['url_location']}{item['url_path']}"
