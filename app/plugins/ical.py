@@ -132,7 +132,7 @@ def handle_birthdays(events):
 
         summary = event["summary"]
 
-        if summary.startswith("Geburtstag"):
+        if summary.startswith("Geburtstag "):
             birthday = True
 
             # Remove "Geburtstag " and extract the name part
