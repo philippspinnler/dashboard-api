@@ -13,6 +13,7 @@ from app.plugins.weather import get_data as get_data_weather
 from app.plugins.publictransportation import get_data as get_data_publictransportation
 from app.plugins.eoguide import get_data as get_data_eoguide
 from app.plugins.presence import get_data as get_data_presence
+from app.plugins.cars import get_data as get_data_cars
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -134,5 +135,11 @@ async def proxy_image(url: str = Query(..., description="The full URL of the ima
 @cache(expire=120)
 async def presence():
     return await get_data_presence()
+
+
+@app.get("/cars")
+@cache(expire=120)
+async def cars():
+    return await get_data_cars()
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

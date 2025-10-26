@@ -6,6 +6,7 @@ TOKEN_URL = "https://api.netatmo.com/oauth2/token"
 DEVICE_ID = config.get_attribute(["netatmo", "device_id"])
 CLIENT_ID = config.get_attribute(["netatmo", "client_id"])
 CLIENT_SECRET = config.get_attribute(["netatmo", "client_secret"])
+OUTDOOR_MODULE_INDEX = config.get_attribute(["netatmo", "outdoor_module_index"])
 
 
 async def get_data():
@@ -56,7 +57,7 @@ def extract_data(response):
     data = response.json()["body"]["devices"][0]
     indoor_temperature = data["dashboard_data"]["Temperature"]
     indoor_co2 = data["dashboard_data"]["CO2"]
-    outdoor_temperature = data["modules"][0]["dashboard_data"]["Temperature"]
+    outdoor_temperature = data["modules"][OUTDOOR_MODULE_INDEX]["dashboard_data"]["Temperature"]
 
     return {
         "indoor_temperature": indoor_temperature,
