@@ -1,4 +1,4 @@
-import re
+import asyncio
 import httpx
 from app import config
 
@@ -8,35 +8,39 @@ async def get_data():
     username = config.get_attribute(["eoguide", "username"])
     password = config.get_attribute(["eoguide", "password"])
 
-    async with httpx.AsyncClient(auth=(username, password)) as client:
-        response = await client.get(
-            f"https://api.appfigures.com/v2/reports/sales/?client_key={client_key}"
+    # Create client with longer timeout
+    timeout = httpx.Timeout(30.0, connect=10.0)
+    async with httpx.AsyncClient(auth=(username, password), timeout=timeout) as client:
+        # Make all API calls concurrently for better performance
+        responses = await asyncio.gather(
+            client.get(
+                f"https://api.appfigures.com/v2/reports/sales/?start_date=-1&client_key={client_key}"
+            ),
+            client.get(
+                f"https://api.appfigures.com/v2/reports/sales/?start_date=-30&client_key={client_key}"
+            ),
+            client.get(
+                f"https://api.appfigures.com/v2/reports/sales/?client_key={client_key}"
+            ),
+            client.get(
+                f"https://api.appfigures.com/v2/reports/ratings/?client_key={client_key}"
+            ),
         )
-        response.raise_for_status()  # Raise error if request fails
-        sales_data = response.json()
 
-        response_review = await client.get(
-            f"https://api.appfigures.com/v2/reviews/?count=1&client_key={client_key}"
-        )
-        response_review.raise_for_status()  # Raise error if request fails
-        review_data = response_review.json()
+        # Check for errors and parse responses
+        for response in responses:
+            response.raise_for_status()
 
-    review = review_data["reviews"][0]
-    total = sales_data["downloads"]
-    total_formatted = "{:,}".format(total).replace(",", "'")
-
-    review_text = review["review"]
-    review_formatted = re.sub(r"([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])", "", review_text).strip()
-    stars = float(review["stars"])
-    stars_formatted = round(stars * 10) / 10
+        sales_24h = responses[0].json()
+        sales_30d = responses[1].json()
+        sales_total = responses[2].json()
+        rating_data = responses[3].json()
 
     return {
-        "total": total,
-        "total_formatted": total_formatted,
-        "latest_review": {
-            "review": review_text,
-            "review_formatted": review_formatted,
-            "stars": stars,
-            "stars_formatted": stars_formatted,
+        "net_downloads": {
+            "last_24h": sales_24h["net_downloads"],
+            "last_30_days": sales_30d["net_downloads"],
+            "total": sales_total["net_downloads"],
         },
+        "overall_rating": float(rating_data["average"]),
     }
