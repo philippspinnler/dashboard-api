@@ -124,55 +124,60 @@ def group_events_by_day(events):
     return grouped_events
 
 
-def handle_birthdays(events):
+def handle_special_events(events):
     new_events = []
     for event in events:
-        age = None
-        birthday = False
-
+        years = None
+        event_type = None
         summary = event["summary"]
 
+        # Check for birthday
         if summary.startswith("Geburtstag "):
-            birthday = True
-
+            event_type = "birthday"
             # Remove "Geburtstag " and extract the name part
             name_part = summary[11:].strip()
-
-            # Extract the year part from the name_part
-            parts = name_part.split()
-
-            if len(parts) == 1:
-                # If there's only one part, assume it's the name
-                name = parts[0]
-                age = None
-            else:
-                year_part = parts[-1]
-
-                # Remove the year from the name_part to clean the summary
-                name = " ".join(parts[:-1])
-
-                try:
-                    year = int(year_part)
-
-                    # If it's a 2-digit year, assume it's in the 1900s (e.g., 85 -> 1985)
-                    if year < 100:
-                        year += 1900
-
-                    # Calculate the age based on the current year
-                    current_year = datetime.now().year
-                    age = current_year - year
-                except ValueError:
-                    age = None
+        # Check for wedding anniversary
+        elif summary.startswith("Hochzeitstag "):
+            event_type = "anniversary"
+            # Remove "Hochzeitstag " and extract the name part
+            name_part = summary[13:].strip()
         else:
-            birthday = False
+            # Not a special event
+            event["special_event"] = None
+            new_events.append(event)
+            continue
 
-        if birthday:
-            event["birthday"] = {
-                "name": name,
-                "age": age,
-            }
+        # Extract the year part from the name_part
+        parts = name_part.split()
+
+        if len(parts) == 1:
+            # If there's only one part, assume it's the name
+            name = parts[0]
+            years = None
         else:
-            event["birthday"] = None
+            year_part = parts[-1]
+
+            # Remove the year from the name_part to clean the summary
+            name = " ".join(parts[:-1])
+
+            try:
+                year = int(year_part)
+
+                # If it's a 2-digit year, assume it's in the 1900s (e.g., 85 -> 1985)
+                if year < 100:
+                    year += 1900
+
+                # Calculate the years based on the current year
+                current_year = datetime.now().year
+                years = current_year - year
+            except ValueError:
+                years = None
+
+        event["special_event"] = {
+            "type": event_type,
+            "name": name,
+            "years": years,
+        }
 
         new_events.append(event)
 
@@ -189,8 +194,8 @@ async def get_events():
         )
         all_events.extend(events)
 
-    # Handle birthdays
-    all_events = handle_birthdays(all_events)
+    # Handle special events (birthdays and anniversaries)
+    all_events = handle_special_events(all_events)
 
     # Sort events by start_date
     sorted_list_of_dicts = sorted(all_events, key=lambda x: x["start_date"])
