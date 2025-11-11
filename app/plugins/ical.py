@@ -1,4 +1,5 @@
 import httpx
+import logging
 
 import locale
 from datetime import datetime, timedelta, time
@@ -8,15 +9,71 @@ from dateutil.rrule import rrulestr
 import pytz
 from app import config
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 local_time_zone = pytz.timezone("Europe/Zurich")
 locale.setlocale(locale.LC_TIME, "de_CH.UTF-8")
 
 
 async def parse_webcal(url):
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
-    cal = Calendar.from_ical(response.text)
-    return cal
+    """
+    Fetch and parse an iCal calendar from a URL.
+    Includes robust error handling and validation.
+    """
+    try:
+        async with httpx.AsyncClient(
+            timeout=30.0,  # 30 second timeout
+            follow_redirects=True,
+            verify=True,  # Verify SSL certificates
+        ) as client:
+            logger.info(f"Fetching calendar from URL: {url}")
+            response = await client.get(url)
+            
+            # Log response details
+            logger.info(f"Response status: {response.status_code}")
+            logger.info(f"Response content-type: {response.headers.get('content-type', 'unknown')}")
+            
+            # Check for successful response
+            if response.status_code != 200:
+                logger.error(f"Failed to fetch calendar from {url}: HTTP {response.status_code}")
+                logger.error(f"Response body (first 500 chars): {response.text[:500]}")
+                raise ValueError(f"HTTP {response.status_code} error when fetching calendar")
+            
+            # Validate response content
+            response_text = response.text.strip()
+            
+            if not response_text:
+                logger.error(f"Empty response from {url}")
+                raise ValueError("Empty calendar response")
+            
+            # Check if response looks like iCal format
+            if not response_text.startswith("BEGIN:VCALENDAR"):
+                logger.error(f"Response doesn't appear to be iCal format from {url}")
+                logger.error(f"Response starts with: {response_text[:200]}")
+                raise ValueError("Response is not in iCal format")
+            
+            logger.debug(f"Response length: {len(response_text)} characters")
+            
+            # Parse the calendar
+            cal = Calendar.from_ical(response_text)
+            logger.info(f"Successfully parsed calendar from {url}")
+            return cal
+            
+    except httpx.TimeoutException as e:
+        logger.error(f"Timeout fetching calendar from {url}: {str(e)}")
+        raise ValueError(f"Timeout fetching calendar: {str(e)}")
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error fetching calendar from {url}: {str(e)}")
+        raise ValueError(f"HTTP error fetching calendar: {str(e)}")
+    except ValueError as e:
+        # Re-raise ValueError with context
+        logger.error(f"Validation error for {url}: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error parsing calendar from {url}: {str(e)}")
+        logger.exception("Full traceback:")
+        raise ValueError(f"Failed to parse calendar: {str(e)}")
 
 
 def ensure_timezone(dt, timezone_str="CET"):
@@ -82,10 +139,21 @@ def get_events_in_next_days(cal, days=3):
 
 
 async def get_events_from_url(url, name, color):
-    cal = await parse_webcal(url)
-    events = get_events_in_next_days(cal, days=5)
-    events = [{**event, "name": name, "color": color} for event in events]
-    return events
+    """
+    Fetch and process events from a calendar URL.
+    Returns empty list on error to allow other calendars to continue processing.
+    """
+    try:
+        cal = await parse_webcal(url)
+        events = get_events_in_next_days(cal, days=5)
+        events = [{**event, "name": name, "color": color} for event in events]
+        logger.info(f"Successfully retrieved {len(events)} events from calendar '{name}'")
+        return events
+    except Exception as e:
+        logger.error(f"Failed to get events from calendar '{name}' ({url}): {str(e)}")
+        logger.exception("Full traceback:")
+        # Return empty list to allow other calendars to continue
+        return []
 
 
 def group_events_by_day(events):
@@ -188,15 +256,58 @@ def handle_special_events(events):
 
 
 async def get_events():
+    """
+    Fetch events from all configured calendars.
+    Continues processing even if individual calendars fail.
+    """
     calendars = config.get_attribute(["calendars"])
-
+    
+    if not calendars:
+        logger.warning("No calendars configured")
+        return []
+    
+    logger.info(f"Processing {len(calendars)} calendar(s)")
+    
     all_events = []
+    successful_calendars = 0
+    failed_calendars = 0
+    
     for calendar in calendars:
-        events = await get_events_from_url(
-            url=calendar.get("icalUrl"), name=calendar.get("name"), color=calendar.get("color")
-        )
-        all_events.extend(events)
-
+        calendar_name = calendar.get("name", "Unknown")
+        calendar_url = calendar.get("icalUrl")
+        calendar_color = calendar.get("color", "#000000")
+        
+        if not calendar_url:
+            logger.error(f"Calendar '{calendar_name}' has no URL configured, skipping")
+            failed_calendars += 1
+            continue
+        
+        try:
+            events = await get_events_from_url(
+                url=calendar_url, 
+                name=calendar_name, 
+                color=calendar_color
+            )
+            all_events.extend(events)
+            
+            if events:
+                successful_calendars += 1
+            else:
+                # Empty events could mean error (logged in get_events_from_url) or no events
+                logger.warning(f"No events returned from calendar '{calendar_name}'")
+                
+        except Exception as e:
+            logger.error(f"Unexpected error processing calendar '{calendar_name}': {str(e)}")
+            logger.exception("Full traceback:")
+            failed_calendars += 1
+            continue
+    
+    logger.info(f"Completed processing: {successful_calendars} successful, {failed_calendars} failed, {len(all_events)} total events")
+    
+    if not all_events:
+        logger.warning("No events found from any calendar")
+        return []
+    
     # Handle special events (birthdays and anniversaries)
     all_events = handle_special_events(all_events)
 
@@ -205,5 +316,6 @@ async def get_events():
 
     # Group the sorted events by day
     grouped_events = group_events_by_day(sorted_list_of_dicts)
-
+    
+    logger.info(f"Returning {len(grouped_events)} days of events")
     return grouped_events
