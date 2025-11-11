@@ -131,33 +131,34 @@ def handle_special_events(events):
         event_type = None
         summary = event["summary"]
 
-        # Check for birthday
-        if summary.startswith("Geburtstag "):
+        # Check for birthday (now at the end)
+        if summary.endswith(" Geburtstag"):
             event_type = "birthday"
-            # Remove "Geburtstag " and extract the name part
-            name_part = summary[11:].strip()
-        # Check for wedding anniversary
-        elif summary.startswith("Hochzeitstag "):
+            # Remove " Geburtstag" and extract the name and year part
+            name_year_part = summary[:-11].strip()
+        # Check for wedding anniversary (now at the end)
+        elif summary.endswith(" Hochzeitstag"):
             event_type = "anniversary"
-            # Remove "Hochzeitstag " and extract the name part
-            name_part = summary[13:].strip()
+            # Remove " Hochzeitstag" and extract the name and year part
+            name_year_part = summary[:-13].strip()
         else:
             # Not a special event
             event["special_event"] = None
             new_events.append(event)
             continue
 
-        # Extract the year part from the name_part
-        parts = name_part.split()
+        # Extract the name and year from name_year_part
+        parts = name_year_part.split()
 
         if len(parts) == 1:
             # If there's only one part, assume it's the name
             name = parts[0]
             years = None
         else:
+            # The last part should be the year
             year_part = parts[-1]
-
-            # Remove the year from the name_part to clean the summary
+            
+            # All parts before the year are the name (supports multiple names)
             name = " ".join(parts[:-1])
 
             try:
@@ -171,6 +172,8 @@ def handle_special_events(events):
                 current_year = datetime.now().year
                 years = current_year - year
             except ValueError:
+                # If year parsing fails, treat all parts as the name
+                name = name_year_part
                 years = None
 
         event["special_event"] = {
