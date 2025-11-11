@@ -10,8 +10,7 @@ person_entities = config.get_attribute(['home_assistant', 'person_entities'])
 
 async def get_data():
     def _get_presence_data():
-        persons_home = []
-        persons_away = []
+        persons = []
 
         with Client(f"{URL}/api", TOKEN) as client:
             for entity_id in person_entities:
@@ -31,13 +30,13 @@ async def get_data():
                     "state": state.state,
                 }
                 
-                if state.state == "home":
-                    persons_home.append(person_entry)
-                else:
-                    persons_away.append(person_entry)
+                persons.append(person_entry)
+        
+        # Sort persons alphabetically by name (case-insensitive)
+        persons.sort(key=lambda x: x['name'].lower())
 
         return {
-            "persons": persons_home + persons_away
+            "persons": persons
         }
     
     return await asyncio.to_thread(_get_presence_data)
