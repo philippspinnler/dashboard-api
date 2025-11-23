@@ -197,7 +197,7 @@ def handle_special_events(events):
     for event in events:
         years = None
         event_type = None
-        summary = event["summary"]
+        summary = event["summary"].strip()
 
         # Check for birthday (now at the end)
         if summary.endswith(" Geburtstag"):
