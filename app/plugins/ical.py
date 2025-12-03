@@ -106,12 +106,23 @@ def get_events_in_next_days(cal, days=3):
         # Handle recurring events
         rrule_str = event.get("rrule")
         if rrule_str:
+            rrule_text = rrule_str.to_ical().decode("utf-8")
+            
+            # Fix for yearly recurring events with BYMONTHDAY but no BYMONTH
+            # This ensures birthdays and anniversaries recur on the correct month
+            if "FREQ=YEARLY" in rrule_text and "BYMONTHDAY=" in rrule_text and "BYMONTH=" not in rrule_text:
+                # Extract month from DTSTART to use as the default
+                start_month = start_date.month
+                # Add BYMONTH to the RRULE to make it explicit
+                rrule_text = rrule_text + f";BYMONTH={start_month}"
+                logger.debug(f"Added BYMONTH={start_month} to RRULE for event: {event.get('summary')}")
+            
             try:
-                rrules = rrulestr(rrule_str.to_ical().decode("utf-8"), dtstart=start_date)
+                rrules = rrulestr(rrule_text, dtstart=start_date)
                 occurrences = rrules.between(today, three_days_later, inc=True)
             except ValueError:
                 rrules = rrulestr(
-                    rrule_str.to_ical().decode("utf-8"),
+                    rrule_text,
                     dtstart=start_date.astimezone(local_time_zone).replace(tzinfo=None),
                 )
                 occurrences = rrules.between(today_no_tz, three_days_later_no_tz, inc=True)
