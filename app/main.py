@@ -49,7 +49,7 @@ async def calendar():
 
 
 @app.get("/netatmo")
-@cache(expire=900)
+@cache(expire=300)
 async def netatmo():
     return await get_data_netatmo()
 
