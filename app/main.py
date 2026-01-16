@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
-from fastapi import FastAPI, File, Form, Query, UploadFile
+from fastapi import FastAPI, File, Form, Query, UploadFile, Request
 from fastapi.responses import HTMLResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.plugins.ical import get_events
 from app.plugins.netatmo import get_data as get_data_netatmo
 from app.plugins.sonos import get_data as get_data_sonos, proxy
@@ -21,6 +22,17 @@ from fastapi_cache.decorator import cache
 from fastapi.middleware.cors import CORSMiddleware
 
 
+class NoCacheMiddleware(BaseHTTPMiddleware):
+    """Middleware to prevent browser caching by adding no-cache headers to all responses."""
+    
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     FastAPICache.init(InMemoryBackend())
@@ -35,6 +47,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add no-cache middleware to prevent browser caching
+app.add_middleware(NoCacheMiddleware)
 
 
 @app.get("/")
