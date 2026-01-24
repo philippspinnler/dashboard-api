@@ -15,6 +15,7 @@ from app.plugins.publictransportation import get_data as get_data_publictranspor
 from app.plugins.eoguide import get_data as get_data_eoguide
 from app.plugins.presence import get_data as get_data_presence
 from app.plugins.cars import get_data as get_data_cars
+from app.plugins.inverter import get_data as get_data_inverter
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -156,5 +157,11 @@ async def presence():
 @cache(expire=120)
 async def cars():
     return await get_data_cars()
+
+
+@app.get("/inverter")
+@cache(expire=10)
+async def inverter():
+    return await get_data_inverter()
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
